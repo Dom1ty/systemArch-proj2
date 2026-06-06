@@ -101,6 +101,36 @@ class ControlUnit extends AbstractControlUnit {
           1.W
         )
       }
+      //Task1
+      //  jal rd, imm     跳转到 pc + imm的地方      然后回来的地方是rd 让rd = pc + 4 即可
+      is(RISCV_OP.JAL) {
+          stalled := STALL_REASON.NO_STALL
+          io_ctrl.reg_we := true.B
+          io_ctrl.reg_write_sel := REG_WRITE_SEL.ALU_OUT
+          io_ctrl.alu_control := ALU_CONTROL(
+          RISCV_TYPE.getFunct7(io_ctrl.instr_type).asUInt(5) ## RISCV_TYPE
+            .getFunct3(io_ctrl.instr_type)
+            .asUInt
+        )
+        io_ctrl.alu_op_1_sel := ALU_OP_1_SEL.RS1
+        io_ctrl.alu_op_2_sel := ALU_OP_2_SEL.RS2
+
+      }
+
+      //  jalr rd, rs1, imm
+      is(RISCV_OP.JAL) {
+          stalled := STALL_REASON.NO_STALL
+          io_ctrl.reg_we := true.B
+          io_ctrl.reg_write_sel := REG_WRITE_SEL.ALU_OUT
+          io_ctrl.alu_control := ALU_CONTROL(
+          RISCV_TYPE.getFunct7(io_ctrl.instr_type).asUInt(5) ## RISCV_TYPE
+            .getFunct3(io_ctrl.instr_type)
+            .asUInt
+        )
+        io_ctrl.alu_op_1_sel := ALU_OP_1_SEL.RS1
+        io_ctrl.alu_op_2_sel := ALU_OP_2_SEL.RS2
+
+      }
     }
   }
 }
