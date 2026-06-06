@@ -50,6 +50,13 @@ class RV32I(
         (io_pc.pc + 4.U)
       )
     }
+    // task2
+    is(NEXT_PC_SELECT.IMM) { // jal
+      io_pc.pc_wdata := io_pc.pc + decoder.io_decoder.imm
+    }
+    is(NEXT_PC_SELECT.ALU_OUT_ALIGNED) { // jalr
+      io_pc.pc_wdata := alu.io_alu.result & "hfffffffe".U
+    }
   }
   io_pc.pc_we := control_unit.io_ctrl.stall === STALL_REASON.NO_STALL
 
@@ -113,6 +120,19 @@ class RV32I(
   switch(control_unit.io_ctrl.next_pc_select) {
     is(NEXT_PC_SELECT.BRANCH) {
       io_trap.trap_valid := branch_unit.io_branch.branch_taken && ((io_pc.pc + decoder.io_decoder.imm) & "h00000003".U) =/= 0.U // Raise an exception if either the LSB or the second bit is set
+      io_trap.trap_reason := TRAP_REASON.INSTRUCTION_ADDRESS_MISALIGNED
+    }
+    // jal
+    is(NEXT_PC_SELECT.IMM) {
+      io_trap.trap_valid :=
+        ((io_pc.pc + decoder.io_decoder.imm) & "h00000003".U) =/= 0.U //  00000000003 是用来取地址最低两位 检测 是不是 00     4 的倍数 最低两位是不是00
+      io_trap.trap_reason := TRAP_REASON.INSTRUCTION_ADDRESS_MISALIGNED
+    }
+
+    // jalr
+    is(NEXT_PC_SELECT.ALU_OUT_ALIGNED) {
+      io_trap.trap_valid :=
+        (alu.io_alu.result & "h00000002".U) =/= 0.U // 与后的结果 只能是 00 eg  0x 02 = 0010  and 0010  = 0010 这里不是0 出现异常     这里已经确认最后一位是 0了
       io_trap.trap_reason := TRAP_REASON.INSTRUCTION_ADDRESS_MISALIGNED
     }
   }

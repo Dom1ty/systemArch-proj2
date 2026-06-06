@@ -71,26 +71,23 @@ class Decoder extends AbstractDecoder {
       ) ## io_decoder.instr(11, 7)
     }
 
-
-    //Task1
+    // Task1
     //  jal rd, imm     跳转到 pc + imm的地方      然后回来的地方是rd 让rd = pc + 4 即可
-    //31        30..21       20        19..12       11..7    6..0
+    // 31        30..21       20        19..12       11..7    6..0
 
-    //imm[20]   imm[10:1]    imm[11]   imm[19:12]   rd       opcode 
+    // imm[20]   imm[10:1]    imm[11]   imm[19:12]   rd       opcode
     // imm[0] = 0 末位要补0所以是 21位， 但 imm需要32位digit 前面sign extend 符号位 11次
     is(RISCV_OP.JAL) {
       io_decoder.rs1 := 0.U
       io_decoder.rs2 := 0.U
       io_decoder.rd := RD
 
-
       io_decoder.imm := Fill(11, io_decoder.instr(31)) ##
-                        io_decoder.instr(31) ##
-                        io_decoder.instr(19, 12) ##
-                        io_decoder.instr(20) ##
-                        io_decoder.instr(30, 21) ## 
-                        0.U(1.W)
-
+        io_decoder.instr(31) ##
+        io_decoder.instr(19, 12) ##
+        io_decoder.instr(20) ##
+        io_decoder.instr(30, 21) ##
+        0.U(1.W)
 
     }
     // jalr rd, rs1, imm
@@ -101,8 +98,8 @@ class Decoder extends AbstractDecoder {
       io_decoder.rs2 := 0.U
       io_decoder.rd := RD
       io_decoder.imm := Fill(20, io_decoder.instr(31)) ##
-                        io_decoder.instr(31, 20) 
-      }
+        io_decoder.instr(31, 20)
+    }
   }
-  
+
 }

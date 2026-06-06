@@ -23,6 +23,7 @@ class ControlUnit extends AbstractControlUnit {
   io_ctrl.alu_op_1_sel := ALU_OP_1_SEL.RS1
   io_ctrl.alu_op_2_sel := ALU_OP_2_SEL.RS2
 
+// memory 1. request memory  2. write enable   3. byte lane
   io_ctrl.data_req := false.B
   io_ctrl.data_we := false.B
   io_ctrl.data_be := 0.U
@@ -101,34 +102,30 @@ class ControlUnit extends AbstractControlUnit {
           1.W
         )
       }
-      //Task1
-      //  jal rd, imm     跳转到 pc + imm的地方      然后回来的地方是rd 让rd = pc + 4 即可
+      // Task1
+      //  jal rd, imm     跳转到pc =  pc + imm的地方      然后回来的地方是rd 让rd = pc + 4 即可
       is(RISCV_OP.JAL) {
-          stalled := STALL_REASON.NO_STALL
-          io_ctrl.reg_we := true.B
-          io_ctrl.reg_write_sel := REG_WRITE_SEL.ALU_OUT
-          io_ctrl.alu_control := ALU_CONTROL(
-          RISCV_TYPE.getFunct7(io_ctrl.instr_type).asUInt(5) ## RISCV_TYPE
-            .getFunct3(io_ctrl.instr_type)
-            .asUInt
-        )
-        io_ctrl.alu_op_1_sel := ALU_OP_1_SEL.RS1
-        io_ctrl.alu_op_2_sel := ALU_OP_2_SEL.RS2
+        stalled := STALL_REASON.NO_STALL
+        io_ctrl.reg_we := true.B
+        // 选择rd的数据来源
+        io_ctrl.reg_write_sel := REG_WRITE_SEL.PC_PLUS_4
+        // pc下一步去哪？
+        io_ctrl.next_pc_select := NEXT_PC_SELECT.IMM
 
       }
 
-      //  jalr rd, rs1, imm
-      is(RISCV_OP.JAL) {
-          stalled := STALL_REASON.NO_STALL
-          io_ctrl.reg_we := true.B
-          io_ctrl.reg_write_sel := REG_WRITE_SEL.ALU_OUT
-          io_ctrl.alu_control := ALU_CONTROL(
-          RISCV_TYPE.getFunct7(io_ctrl.instr_type).asUInt(5) ## RISCV_TYPE
-            .getFunct3(io_ctrl.instr_type)
-            .asUInt
-        )
+      //  jalr rd, rs1, imm   pc =（rs1 + imm）& 11111110 最后一位需要清0   w       rd = pc +4
+      is(RISCV_OP.JALR) {
+        stalled := STALL_REASON.NO_STALL
+        io_ctrl.reg_we := true.B
+        io_ctrl.reg_write_sel := REG_WRITE_SEL.PC_PLUS_4
+
+        // 调用alu 计算
+        io_ctrl.alu_control := ALU_CONTROL.ADD
         io_ctrl.alu_op_1_sel := ALU_OP_1_SEL.RS1
-        io_ctrl.alu_op_2_sel := ALU_OP_2_SEL.RS2
+        io_ctrl.alu_op_2_sel := ALU_OP_2_SEL.IMM
+
+        io_ctrl.next_pc_select := NEXT_PC_SELECT.ALU_OUT_ALIGNED
 
       }
     }
